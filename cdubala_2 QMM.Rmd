@@ -1,0 +1,154 @@
+title: "QMM-2 [811348198]"
+author: "Charm"
+date: "2024-09-22"
+output: html_document
+---
+
+##Introduction to Linear Programming
+Linear programming (LP) is a mathematical method used for optimization, aiming to either maximize or minimize a linear objective function subject to a set of linear constraints. This technique finds applications in various domains, such as operations research, economics, and logistics. In this assignment, we will utilize LP to optimize the production process for the Weigelt Corporation, which operates three branch plants with excess production capacity and is ready to launch a new product.
+
+##Problem Overview
+
+Weigelt Corporation faces several critical factors:
+
+The company can manufacture three sizes of a new product: large, medium, and small.
+Each product size has different profit margins: $420 for large, $360 for medium, and $300 for small.
+The production capacities at the three plants are as follows: Plant 1 can produce 750 units, Plant 2 can produce 900 units, and Plant 3 can produce 450 units each day.
+Storage space limitations also affect production rates: Plant 1 has 13,000 square feet available, Plant 2 has 12,000 square feet, and Plant 3 has 5,000 square feet, with each product size requiring a different amount of space.
+Sales forecasts indicate potential sales caps: 900 large, 1,200 medium, and 750 small units per day.
+To avoid employee layoffs, management has decided that each plant should utilize the same percentage of its excess capacity for production.
+
+##Formulating the Problem
+
+Decision Variables
+
+To begin, we define the decision variables that represent the quantities produced at each plant for the different product sizes:
+
+x1L,x1𝑀x 1M,x1𝑆 for Plant 1 (large, medium, small).
+
+x2𝐿,x2M,x2𝑆for Plant 2.
+
+x3𝐿,x3𝑀,x3𝑆for Plant 3.
+
+This results in a total of nine decision variables.
+
+Objective Function
+
+The goal is to maximize the profit derived from producing the new product. The profit associated with each size is given, which allows us to formulate the objective function:
+
+𝑍=420(𝑥1𝐿+𝑥2𝐿+𝑥3𝐿)+360(𝑥1𝑀+𝑥2𝑀+𝑥3𝑀)+300(𝑥1𝑆+𝑥2𝑆+𝑥3𝑆)
+
+This equation sums the profits from all product sizes produced across all plants.
+
+Constraints
+Constraints are crucial as they limit the feasible solutions. In this case, we have several types of constraints:
+
+Production Capacity Constraints: Each plant has a maximum capacity for production, represented by:
+
+Plant 1: 𝑥1𝐿+𝑥1𝑀+𝑥1𝑆≤750
+Plant 2: 𝑥2𝐿+𝑥2𝑀+𝑥𝑆≤900
+Plant 3: 𝑥3𝐿+𝑥3𝑀+𝑥3𝑆≤450
+Storage Space Constraints: Each unit produced requires specific storage space:
+
+Plant 1: 20𝑥1𝐿+15𝑥1𝑀+12𝑥1𝑆≤13000
+Plant 2: 20𝑥2𝐿+15𝑥2𝑀+12𝑥2𝑆≤12000
+Plant 3: 20𝑥3𝐿+15𝑥3𝑀+12𝑥3𝑆≤5000
+Sales Forecast Constraints: These constraints set maximum limits for sales of each product size:
+
+Large: 𝑥1𝐿≤900,𝑥2𝐿≤900,𝑥3𝐿≤900
+Medium: 𝑥1𝑀≤1200, 𝑥2𝑀≤1200,𝑥3𝑀≤1200
+Small: 𝑥1𝑆≤750,𝑥2𝑆≤750,𝑥3𝑆≤750
+
+Equal Percentage Capacity Constraint: To ensure uniform capacity utilization across plants, we introduce a variable 
+𝑘
+k:
+
+For Plant 1: 𝑥1𝐿+𝑥1𝑀+𝑥1𝑆/750=k
+For Plant 2: 𝑥2𝐿+𝑥2𝑀+𝑥2𝑆/900=k
+For Plant 3: 𝑥3𝐿+𝑥3𝑀+𝑥3𝑆/450=k
+
+Implementing in R
+
+Having formulated the problem, we can now implement it in R using the lpSolve package.
+
+Step-by-Step R Implementation
+#1)Loading the Library:
+Begin by loading the lpSolve library:
+```{r}
+library(lpSolve)
+
+```
+
+#2)Defining the Objective Function:
+Creating a vector representing the profits for all product sizes:
+```{r}
+objective <- c(420, 360, 300, 420, 360, 300, 420, 360, 300)
+
+```
+
+#3)Seting Up the Constraints:
+Constructing a matrix that represents the coefficients for each constraint:
+```{r}
+constraints <- matrix(c(
+  1, 1, 1, 0, 0, 0, 0, 0, 0,      # Plant 1 capacity
+  0, 0, 0, 1, 1, 1, 0, 0, 0,      # Plant 2 capacity
+  0, 0, 0, 0, 0, 0, 1, 1, 1,      # Plant 3 capacity
+  20, 15, 12, 0, 0, 0, 0, 0, 0,   # Plant 1 storage
+  0, 0, 0, 20, 15, 12, 0, 0, 0,   # Plant 2 storage
+  0, 0, 0, 0, 0, 0, 20, 15, 12,   # Plant 3 storage
+  1, 0, 0, 1, 0, 0, 1, 0, 0,      # Large sales limit
+  0, 1, 0, 0, 1, 0, 0, 1, 0,      # Medium sales limit
+  0, 0, 1, 0, 0, 1, 0, 0, 1       # Small sales limit
+), nrow=9, byrow=TRUE)
+
+```
+
+#4)Right-Hand Side Values:
+Creating a vector for the constraints' right-hand side values:
+```{r}
+rhs <- c(750, 900, 450, 13000, 12000, 5000, 900, 1200, 750)
+
+```
+
+#5)Constrainting Directions:
+Indicateing that all constraints are "less than or equal to":
+```{r}
+directions <- c("<=", "<=", "<=", "<=", "<=", "<=", "<=", "<=", "<=")
+
+```
+#6)Solveing the Linear Program:
+Utilizeing the lp function to find the optimal solution:
+```{r}
+solution <- lp("max", objective, constraints, directions, rhs)
+
+```
+#7)Output Results:
+Display the results, which include the optimal production quantities and the maximum profit:
+
+```{r}
+print(solution)
+print(solution$solution)  # Optimal quantities produced
+print(solution$objval)    # Maximum profit
+
+```
+#Interpreting the Output:
+
+Once the R code is executed, we can analyze the results:
+
+Optimal Production Quantities: The vector solution$solution reveals how many units of each product size should be produced at each plant to maximize profits.
+Maximum Profit: The value solution$objval indicates the maximum profit achievable under the specified constraints.
+
+
+#Conclusion:
+
+In conclusion, we have successfully tackled the Weigelt Corporation's linear programming problem by carefully formulating the objective function and constraints, and then implementing the solution in R with the lpSolve library. This method has enabled us to maximize profits while considering the operational constraints related to production capacity, storage space, and sales forecasts across the company's three plants.
+
+By establishing clear decision variables and following a structured optimization process, we identified the optimal production levels for each product size at every plant. The outcomes provide valuable insights for management regarding potential profits, while also ensuring efficient resource use and reducing the likelihood of layoffs by utilizing excess production capacity.
+
+This case illustrates the practical use of linear programming in real-world business contexts, offering a strong framework for decision-making in production and operations management. The capability to model complex constraints and relationships empowers organizations to make informed choices that improve profitability and operational effectiveness. If you have any questions or would like to discuss further, please don't hesitate to ask!
+
+
+
+
+
+
